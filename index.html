@@ -1,263 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faiz Hesaplama Aracı</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-            background-color: #f4f4f4;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            font-size: 24px;
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            color: #555;
-        }
-
-        input[type="text"], select {
-            width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 14px;
-            color: #333;
-            box-sizing: border-box;
-        }
-
-        input[readonly] {
-            background-color: #f9f9f9;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px 15px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-
-        .result p {
-            margin: 10px 0;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .comparison-table {
-            margin-top: 30px;
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .comparison-table th, .comparison-table td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-
-        .comparison-table th {
-            background-color: #007BFF;
-            color: white;
-        }
-
-        .comparison-table td {
-            background-color: #f9f9f9;
-        }
-
-        .info {
-            font-size: 14px;
-            color: #666;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .info em {
-            color: #007BFF;
-        }
-
-        .small-text {
-            font-size: 12px;
-            color: #aaa;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faiz Hesaplama</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Faiz Hesaplama Aracı</h1>
-        
-        <label for="principal">Anapara (TL):</label>
-        <input type="text" id="principal" placeholder="Ör: 1.000.000" oninput="formatInput(this); updateNonInterest()">
+  <h1>Faiz Hesaplama</h1>
 
-        <label for="bankSelect">Bankayı Seçin:</label>
-        <select id="bankSelect" onchange="updateNonInterest()">
-            <option value="odeabank">Odeabank</option>
-            <option value="teb">TEB Bank</option>
-        </select>
-
-        <label for="nonInterest">Vadesiz Tutar (TL) <span class="small-text">(Sadece Günlük Faiz Hesabında Düşülür)</span>:</label>
-        <input type="text" id="nonInterest" placeholder="Vadesiz Tutarı Gösterilecek" readonly>
-
-        <button onclick="calculateInterest()">Faiz Hesapla</button>
-
-        <div id="result" class="result"></div>
-        
-        <table class="comparison-table">
-            <thead>
-                <tr>
-                    <th>Tutar Aralığı (TL)</th>
-                    <th>Odeabank Faiz Oranı</th>
-                    <th>TEB Bank Faiz Oranı</th>
-                    <th>Vadesiz Alt Limit (TL)</th>
-                </tr>
-            </thead>
-            <tbody id="comparisonTableBody"></tbody>
-        </table>
-
-        <div class="info">
-            <p><strong>Not:</strong> <em>Vadesiz Tutar, yalnızca günlük faiz hesabı yapılırken dikkate alınacaktır. Normal faiz hesaplamasında yer almaz.</em></p>
-        </div>
+  <form id="form">
+    <div>
+      <label for="principal">Ana Para:</label>
+      <input type="text" id="principal" placeholder="Ana para (örn. 1.000.000)">
     </div>
+    <div>
+      <label for="rate">Faiz Oranı (Yıllık %):</label>
+      <input type="text" id="rate" placeholder="Faiz oranı (örn. 10)">
+    </div>
+    <div>
+      <label for="term">Vade (gün):</label>
+      <input type="text" id="term" placeholder="Vade (örn. 30)">
+    </div>
+    <button type="submit">Faiz Hesapla</button>
+  </form>
 
-    <script>
-        const odeabankLimits = [
-            { min: 0, max: 25000, nonInterest: 7500, rate: 52 },
-            { min: 25001, max: 50000, nonInterest: 7500, rate: 52 },
-            { min: 50001, max: 100000, nonInterest: 10000, rate: 52 },
-            { min: 100001, max: 250000, nonInterest: 20000, rate: 52 },
-            { min: 250001, max: 500000, nonInterest: 40000, rate: 41 },
-            { min: 500001, max: 750000, nonInterest: 75000, rate: 40 },
-            { min: 750001, max: 1000000, nonInterest: 125000, rate: 40 },
-            { min: 1000001, max: 2000000, nonInterest: 200000, rate: 40 },
-            { min: 2000001, max: 5000000, nonInterest: 300000, rate: 35 },
-            { min: 5000001, max: 10000000, nonInterest: 500000, rate: 13.5 }
-        ];
+  <h2>Sonuçlar</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Bankalar</th>
+        <th>Vadesiz Tutar</th>
+        <th>Vadeli Faiz</th>
+        <th>Günlük Faiz Getirisi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Odeabank</td>
+        <td id="odea_vadesiz_tutar"></td>
+        <td id="odea_vadeli"></td>
+        <td id="odea_bilesik"></td>
+      </tr>
+      <tr>
+        <td>TEB</td>
+        <td id="teb_vadesiz_tutar"></td>
+        <td id="teb_vadeli"></td>
+        <td id="teb_bilesik"></td>
+      </tr>
+    </tbody>
+  </table>
 
-        const tebLimits = [
-            { min: 0, max: 5000, nonInterest: 0, rate: 0 },
-            { min: 5001, max: 9999, nonInterest: 5000, rate: 53 },
-            { min: 10000, max: 24999, nonInterest: 5000, rate: 53 },
-            { min: 25000, max: 49999, nonInterest: 5000, rate: 53 },
-            { min: 50000, max: 99999, nonInterest: 7500, rate: 53 },
-            { min: 100000, max: 249999, nonInterest: 15000, rate: 53 },
-            { min: 250000, max: 499999, nonInterest: 30000, rate: 53 },
-            { min: 500000, max: 749999, nonInterest: 50000, rate: 53 },
-            { min: 750000, max: 1000000, nonInterest: 50000, rate: 53 },
-            { min: 1000001, max: 1500000, nonInterest: 125000, rate: 53 },
-            { min: 1500001, max: 2000000, nonInterest: 150000, rate: 53 },
-            { min: 2000001, max: 3000000, nonInterest: 200000, rate: 53 },
-            { min: 3000001, max: 4000000, nonInterest: 250000, rate: 53 },
-            { min: 4000001, max: Infinity, nonInterest: 0, rate: 0 }
-        ];
-
-        function formatInput(input) {
-            const value = input.value.replace(/\D/g, '');
-            input.value = new Intl.NumberFormat('tr-TR').format(value);
-        }
-
-        function parseInput(input) {
-            return parseFloat(input.value.replace(/\./g, '')) || 0;
-        }
-
-        function updateNonInterest() {
-            const principal = parseInput(document.getElementById('principal'));
-            const bank = document.getElementById('bankSelect').value;
-            const selectedLimits = bank === 'odeabank' ? odeabankLimits : tebLimits;
-
-            let nonInterestAmount = 0;
-            for (const range of selectedLimits) {
-                if (principal >= range.min && principal <= range.max) {
-                    nonInterestAmount = range.nonInterest;
-                    break;
-                }
-            }
-
-            document.getElementById('nonInterest').value = new Intl.NumberFormat('tr-TR').format(nonInterestAmount);
-            updateComparisonTable(principal, bank);
-        }
-
-        function updateComparisonTable(principal, bank) {
-            const selectedLimits = bank === 'odeabank' ? odeabankLimits : tebLimits;
-            const comparisonTableBody = document.getElementById('comparisonTableBody');
-
-            comparisonTableBody.innerHTML = '';
-
-            for (const range of selectedLimits) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${new Intl.NumberFormat('tr-TR').format(range.min)} - ${new Intl.NumberFormat('tr-TR').format(range.max)} TL</td>
-                    <td>${range.rate}%</td>
-                    <td>${range.rate}%</td>
-                    <td>${new Intl.NumberFormat('tr-TR').format(range.nonInterest)} TL</td>
-                `;
-                comparisonTableBody.appendChild(row);
-            }
-        }
-
-        function calculateInterest() {
-            const principal = parseInput(document.getElementById('principal'));
-            const bank = document.getElementById('bankSelect').value;
-            const selectedLimits = bank === 'odeabank' ? odeabankLimits : tebLimits;
-            const resultElement = document.getElementById('result');
-
-            let applicableRate = 0;
-            let nonInterestAmount = 0;
-            
-            for (const range of selectedLimits) {
-                if (principal >= range.min && principal <= range.max) {
-                    applicableRate = range.rate;
-                    nonInterestAmount = range.nonInterest;
-                    break;
-                }
-            }
-
-            const interestAmount = principal * (applicableRate / 100);
-            const totalAmount = principal + interestAmount - nonInterestAmount;
-
-            resultElement.innerHTML = `
-                <p><strong>Uygulanan Faiz Oranı:</strong> ${applicableRate}%</p>
-                <p><strong>Faiz Tutarı:</strong> ${new Intl.NumberFormat('tr-TR').format(interestAmount)} TL</p>
-                <p><strong>Vadesiz Tutar (Düşülen):</strong> ${new Intl.NumberFormat('tr-TR').format(nonInterestAmount)} TL</p>
-                <p><strong>Toplam Tutar:</strong> ${new Intl.NumberFormat('tr-TR').format(totalAmount)} TL</p>
-            `;
-        }
-    </script>
 </body>
 </html>

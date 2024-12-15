@@ -1,0 +1,30 @@
+{
+  "odeabank": [
+    { "min": 0, "max": 25000, "nonInterest": 7500 },
+    { "min": 25001, "max": 50000, "nonInterest": 7500 },
+    { "min": 50001, "max": 100000, "nonInterest": 10000 },
+    { "min": 100001, "max": 250000, "nonInterest": 20000 },
+    { "min": 250001, "max": 500000, "nonInterest": 40000 },
+    { "min": 500001, "max": 750000, "nonInterest": 75000 },
+    { "min": 750001, "max": 1000000, "nonInterest": 125000 },
+    { "min": 1000001, "max": 2000000, "nonInterest": 200000 },
+    { "min": 2000001, "max": 5000000, "nonInterest": 300000 },
+    { "min": 5000001, "max": 10000000, "nonInterest": 500000 }
+  ],
+  "teb": [
+    { "min": 0, "max": 5000, "nonInterest": 0 },
+    { "min": 5001, "max": 9999, "nonInterest": 5000 },
+    { "min": 10000, "max": 24999, "nonInterest": 5000 },
+    { "min": 25000, "max": 49999, "nonInterest": 5000 },
+    { "min": 50000, "max": 99999, "nonInterest": 7500 },
+    { "min": 100000, "max": 249999, "nonInterest": 15000 },
+    { "min": 250000, "max": 499999, "nonInterest": 30000 },
+    { "min": 500000, "max": 749999, "nonInterest": 50000 },
+    { "min": 750000, "max": 1000000, "nonInterest": 50000 },
+    { "min": 1000001, "max": 1500000, "nonInterest": 125000 },
+    { "min": 1500001, "max": 2000000, "nonInterest": 150000 },
+    { "min": 2000001, "max": 3000000, "nonInterest": 200000 },
+    { "min": 3000001, "max": 4000000, "nonInterest": 250000 },
+    { "min": 4000001, "max": Infinity, "nonInterest": 0 }
+  ]
+}
