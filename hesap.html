@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Profesyonel Hesaplama Paneli</title>
+    <style>
+        /* Önceki stil tanımlamaları aynen korundu */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .calculator-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        input, button {
+            padding: 8px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .result {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        
+        h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+        
+        .currency-group {
+            position: relative;
+            margin: 10px 0;
+        }
+        
+        .currency-flag {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+        }
+        
+        .currency-input {
+            padding-left: 40px !important;
+        }
+        
+        .loading {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Önceki HTML yapısı aynen korundu -->
+    <div class="grid-container">
+        <!-- Fiyat Değişim Hesaplayıcı -->
+        <div class="calculator-box">
+            <h3>📉 Fiyat Değişimi</h3>
+            <input type="text" class="formatted-input" placeholder="Orijinal Fiyat">
+            <input type="text" class="formatted-input" placeholder="Yeni Fiyat">
+            <button onclick="calculatePriceChange()">Hesapla</button>
+            <div class="result" id="priceChangeResult"></div>
+        </div>
+
+        <!-- Maliyet & Kar Marjı -->
+        <div class="calculator-box">
+            <h3>📊 Maliyet & Kar</h3>
+            <input type="text" class="formatted-input" id="costPrice" placeholder="Maliyet">
+            <input type="number" id="profitMargin" placeholder="Kar Marjı (%)">
+            <button onclick="calculateSellingPrice()">Hesapla</button>
+            <div class="result" id="sellingPriceResult"></div>
+        </div>
+
+        <!-- İndirim Hesaplayıcı -->
+        <div class="calculator-box">
+            <h3>🎯 İndirim Hesaplama</h3>
+            <input type="text" class="formatted-input" id="originalSellingPrice" placeholder="Orijinal Fiyat">
+            <input type="number" id="discountRate" placeholder="İndirim Oranı (%)">
+            <button onclick="calculateDiscountedPrice()">Hesapla</button>
+            <div class="result" id="discountResult"></div>
+        </div>
+
+        <!-- Güncellenmiş Döviz Çevirici -->
+        <div class="calculator-box">
+            <h3>💱 Döviz Çevirici</h3>
+            <div class="currency-group">
+                <img src="https://flagcdn.com/tr.svg" class="currency-flag" alt="TL">
+                <input type="text" class="currency-input" id="try" placeholder="TL" data-currency="TRY">
+            </div>
+            <div class="currency-group">
+                <img src="https://flagcdn.com/us.svg" class="currency-flag" alt="USD">
+                <input type="text" class="currency-input" id="usd" placeholder="USD" data-currency="USD">
+            </div>
+            <div class="currency-group">
+                <img src="https://flagcdn.com/eu.svg" class="currency-flag" alt="EUR">
+                <input type="text" class="currency-input" id="eur" placeholder="EUR" data-currency="EUR">
+            </div>
+            <div class="loading" id="loading">Son güncelleme: Yükleniyor...</div>
+        </div>
+
+        <!-- Kar Marjı Kontrol -->
+        <div class="calculator-box">
+            <h3>🔍 Kar Marjı Kontrol</h3>
+            <input type="text" class="formatted-input" id="cost2" placeholder="Maliyet">
+            <input type="text" class="formatted-input" id="selling2" placeholder="Satış Fiyatı">
+            <button onclick="calculateProfitMargin()">Hesapla</button>
+            <div class="result" id="marginResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // Güncellenmiş Sayı Formatlama Fonksiyonları
+        function formatNumber(num) {
+            const [integer, decimal] = num.toFixed(2).split('.');
+            return integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "," + decimal;
+        }
+
+        function parseNumber(str) {
+            const cleaned = str.replace(/\./g, '').replace(/,/g, '.');
+            return parseFloat(cleaned) || 0;
+        }
+
+        // Güncellenmiş Input Formatlama
+        document.querySelectorAll('.currency-input').forEach(input => {
+            input.addEventListener('input', function(e) {
+                let value = e.target.value
+                    .replace(/[^0-9,]/g, '') // Sadece sayı ve virgül
+                    .replace(/(,.*?),/g, '$1'); // Birden fazla virgülü engelle
+
+                // Ondalık kısım kontrolü
+                const parts = value.split(',');
+                if(parts.length > 1) {
+                    parts[1] = parts[1].slice(0, 2); // Max 2 decimal
+                    value = parts[0] + ',' + parts[1];
+                }
+
+                // Binlik ayraç ekleme
+                parts[0] = parts[0].replace(/\D/g, '')
+                                 .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                
+                e.target.value = parts.length > 1 ? parts[0] + ',' + parts[1] : parts[0];
+            });
+        });
+
+        // Diğer Inputlar için Formatlama (Döviz dışı)
+        document.querySelectorAll('.formatted-input:not(.currency-input)').forEach(input => {
+            input.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/[^0-9,]/g, '');
+                const parts = value.split(',');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                e.target.value = parts.length > 1 ? parts[0] + ',' + parts[1] : parts[0];
+            });
+        });
+
+        // Güncellenmiş Döviz Çevirme Fonksiyonu
+        let rates = { USD: 32.50, EUR: 34.75, TRY: 1 };
+        let activeField = null;
+
+        async function fetchExchangeRates() {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                const data = await response.json();
+                rates.USD = data.rates.TRY;
+                rates.EUR = data.rates.TRY / data.rates.EUR;
+                document.getElementById('loading').textContent = `Son güncelleme: ${new Date().toLocaleTimeString()}`;
+            } catch (error) {
+                console.error('API Hatası:', error);
+                document.getElementById('loading').textContent = 'Canlı veri alınamadı (Varsayılan kullanılıyor)';
+            }
+        }
+
+        function convertCurrency(value, fromCurrency) {
+            const parsedValue = parseNumber(value);
+            if(isNaN(parsedValue) || parsedValue === 0) {
+                document.getElementById('try').value = '';
+                document.getElementById('usd').value = '';
+                document.getElementById('eur').value = '';
+                return;
+            }
+
+            const results = {
+                TRY: parsedValue * rates[fromCurrency],
+                USD: parsedValue / rates.USD,
+                EUR: parsedValue / rates.EUR
+            };
+
+            // Formatlama iyileştirmeleri
+            document.getElementById('try').value = fromCurrency !== 'TRY' ? formatNumber(results.TRY) : value;
+            document.getElementById('usd').value = fromCurrency !== 'USD' ? formatNumber(results.USD) : value;
+            document.getElementById('eur').value = fromCurrency !== 'EUR' ? formatNumber(results.EUR) : value;
+        }
+
+        // Diğer Hesaplama Fonksiyonları (Aynen korundu)
+        function calculatePriceChange() {
+            const original = parseNumber(document.querySelectorAll('.formatted-input')[0].value);
+            const newPrice = parseNumber(document.querySelectorAll('.formatted-input')[1].value);
+            const change = ((newPrice - original) / original * 100).toFixed(2) + '%';
+            document.getElementById('priceChangeResult').innerHTML = 
+                `Fiyat Değişimi: ${change.replace('.', ',')} (${newPrice > original ? 'Artış' : 'Düşüş'})`;
+        }
+
+        function calculateSellingPrice() {
+            const cost = parseNumber(document.getElementById('costPrice').value);
+            const margin = parseFloat(document.getElementById('profitMargin').value);
+            const sellingPrice = cost / (1 - (margin/100));
+            document.getElementById('sellingPriceResult').innerHTML = 
+                `Satış Fiyatı: ${formatNumber(sellingPrice)}`;
+        }
+
+        function calculateDiscountedPrice() {
+            const original = parseNumber(document.getElementById('originalSellingPrice').value);
+            const discount = parseFloat(document.getElementById('discountRate').value);
+            const newPrice = original * (1 - discount/100);
+            document.getElementById('discountResult').innerHTML = 
+                `İndirimli Fiyat: ${formatNumber(newPrice)}`;
+        }
+
+        function calculateProfitMargin() {
+            const cost = parseNumber(document.getElementById('cost2').value);
+            const selling = parseNumber(document.getElementById('selling2').value);
+            const margin = ((selling - cost) / selling * 100).toFixed(2);
+            document.getElementById('marginResult').innerHTML = 
+                `Kar Marjı: ${margin.replace('.', ',')}% (Net: ${formatNumber(selling - cost)})`;
+        }
+
+        // Etkinlik Dinleyicileri
+        document.querySelectorAll('.currency-input').forEach(input => {
+            input.addEventListener('focus', () => activeField = input.dataset.currency);
+            input.addEventListener('input', (e) => {
+                setTimeout(() => convertCurrency(e.target.value, activeField), 100);
+            });
+        });
+
+        // Sayfa Yükleme
+        fetchExchangeRates();
+        setInterval(fetchExchangeRates, 300000);
+    </script>
+</body>
+</html>
