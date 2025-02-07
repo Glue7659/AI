@@ -3,23 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <title>LED Panel Hesaplayıcı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --input-bg: #ffffff;
+            --border-color: #dddddd;
+            --result-bg: #e8f5e9;
+            --panel-color: #4CAF50;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --input-bg: #2d2d2d;
+            --border-color: #404040;
+            --result-bg: #2d3b2a;
+            --panel-color: #45a049;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             max-width: 1200px;
             margin: 20px auto;
             padding: 20px;
-            background-color: #f0f0f0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        /* Modern Toggle Butonu */
+        .theme-toggle-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .theme-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 24px;
+        }
+
+        .theme-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .theme-slider {
+            background-color: var(--panel-color);
+        }
+
+        input:checked + .theme-slider:before {
+            transform: translateX(26px);
         }
 
         .calculator {
-            background-color: white;
+            background-color: var(--bg-color);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
+            border: 1px solid var(--border-color);
         }
 
         .input-group {
@@ -29,19 +107,21 @@
         label {
             display: block;
             margin-bottom: 5px;
-            color: #333;
+            color: var(--text-color);
         }
 
         input {
             width: 100%;
             padding: 8px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             box-sizing: border-box;
+            background-color: var(--input-bg);
+            color: var(--text-color);
         }
 
         button {
-            background-color: #4CAF50;
+            background-color: var(--panel-color);
             color: white;
             padding: 10px 20px;
             border: none;
@@ -50,19 +130,17 @@
             width: 100%;
             font-size: 16px;
             margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #45a049;
+            font-family: 'Poppins', sans-serif;
         }
 
         .result {
             margin-top: 20px;
             padding: 15px;
-            background-color: #e8f5e9;
+            background-color: var(--result-bg);
             border-radius: 4px;
             display: none;
             width: 100%;
+            border: 1px solid var(--border-color);
         }
 
         .result-group {
@@ -74,26 +152,16 @@
         .result-box {
             flex: 1;
             padding: 15px;
-            background-color: #f9f9f9;
+            background-color: var(--bg-color);
             border-radius: 4px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .result-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
         .result-box.active {
-            border-color: #4CAF50;
-            background-color: #f0f9eb;
-        }
-
-        .result-box h3 {
-            margin-top: 0;
-            color: #333;
+            border-color: var(--panel-color);
+            background-color: var(--result-bg);
         }
 
         .canvas-container {
@@ -101,20 +169,22 @@
             text-align: center;
             width: 100%;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
         }
 
         canvas {
-            border: 2px solid #ddd;
+            border: 2px solid var(--border-color);
             border-radius: 4px;
-            background-color: #fff;
+            background-color: var(--input-bg);
             max-width: 100%;
         }
 
         .scale-info {
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 5px;
+            color: #999;
+            font-size: 0.8em;
+            margin-top: 10px;
+            text-align: center;
         }
 
         .form-group {
@@ -124,27 +194,34 @@
 
         .form-group h3 {
             margin-top: 0;
-            color: #333;
+            color: var(--text-color);
             padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .dimension-details {
             margin-top: 8px;
             font-size: 0.9em;
-            color: #666;
+            color: var(--text-color);
         }
 
         .dimension-details span {
             display: inline-block;
             margin: 2px 5px;
             padding: 2px 5px;
-            background: #eee;
+            background: var(--input-bg);
             border-radius: 3px;
         }
     </style>
 </head>
 <body>
+    <div class="theme-toggle-container">
+        <label class="theme-toggle">
+            <input type="checkbox" id="themeCheckbox" onclick="toggleTheme()">
+            <span class="theme-slider"></span>
+        </label>
+    </div>
+    
     <div class="calculator">
         <div class="form-group">
             <h3>Toplam Panel Boyutu</h3>
@@ -200,6 +277,21 @@
     </div>
 
     <script>
+        // Tema değiştirme fonksiyonu
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            body.setAttribute('data-theme', newTheme);
+            document.getElementById('themeCheckbox').checked = newTheme === 'dark';
+        }
+
+        // Sayfa yüklendiğinde tema durumunu kontrol et
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentTheme = document.body.getAttribute('data-theme') || 'light';
+            document.getElementById('themeCheckbox').checked = currentTheme === 'dark';
+        });
+
         const canvas = document.getElementById('panelCanvas');
         const ctx = canvas.getContext('2d');
         let currentCalculation = null;
@@ -216,23 +308,18 @@
                 return;
             }
 
-            // Hesaplamaları yap
             calculations = {
                 overflow: calculateDimensions(totalWidth, totalHeight, panelWidth, panelHeight, 'ceil'),
                 underflow: calculateDimensions(totalWidth, totalHeight, panelWidth, panelHeight, 'floor')
             };
 
-            // Sonuçları göster
             updateResultDisplay();
             document.getElementById('result').style.display = 'block';
-            
-            // Varsayılan olarak taşan hesaplamayı göster
             showDrawing('overflow');
         }
 
         function calculateDimensions(totalW, totalH, panelW, panelH, method) {
             const calcMethod = method === 'ceil' ? Math.ceil : Math.floor;
-            
             const cols = calcMethod(totalW / panelW);
             const rows = calcMethod(totalH / panelH);
             const actualW = cols * panelW;
@@ -250,14 +337,12 @@
         }
 
         function updateResultDisplay() {
-            // Taşan hesaplama
             document.getElementById('overflowCount').textContent = calculations.overflow.totalPanels;
             document.getElementById('overflowDimensions').textContent = 
                 `${calculations.overflow.actualW.toFixed(1)}cm × ${calculations.overflow.actualH.toFixed(1)}cm`;
             document.getElementById('overflowDifference').textContent = 
                 `+${calculations.overflow.diffW.toFixed(1)}cm × +${calculations.overflow.diffH.toFixed(1)}cm`;
 
-            // Eksik hesaplama
             document.getElementById('underflowCount').textContent = calculations.underflow.totalPanels;
             document.getElementById('underflowDimensions').textContent = 
                 `${calculations.underflow.actualW.toFixed(1)}cm × ${calculations.underflow.actualH.toFixed(1)}cm`;
@@ -267,13 +352,10 @@
 
         function showDrawing(type) {
             currentCalculation = type;
-            
-            // Active state yönetimi
             document.querySelectorAll('.result-box').forEach(box => 
                 box.classList.remove('active'));
             document.getElementById(`${type}Result`).classList.add('active');
             
-            // Çizimi güncelle
             drawPanels(
                 calculations[type].actualW,
                 calculations[type].actualH,
@@ -287,7 +369,6 @@
         function drawPanels(totalW, totalH, panelW, panelH, cols, rows) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Dinamik canvas boyutlandırma
             const containerWidth = canvas.parentElement.offsetWidth;
             const aspectRatio = totalW / totalH;
             const maxHeight = 400;
@@ -295,7 +376,6 @@
             canvas.width = Math.min(containerWidth - 40, 800);
             canvas.height = Math.min(canvas.width / aspectRatio, maxHeight);
 
-            // Ölçek hesapla
             const padding = 20;
             const scaleW = (canvas.width - 2 * padding) / totalW;
             const scaleH = (canvas.height - 2 * padding) / totalH;
@@ -304,11 +384,9 @@
             const drawWidth = totalW * scale;
             const drawHeight = totalH * scale;
             
-            // Ortala
             const offsetX = (canvas.width - drawWidth) / 2;
             const offsetY = (canvas.height - drawHeight) / 2;
 
-            // Panelleri çiz
             ctx.strokeStyle = '#4CAF50';
             ctx.lineWidth = 1;
             
@@ -319,7 +397,6 @@
                     
                     ctx.strokeRect(x, y, panelW * scale, panelH * scale);
                     
-                    // Panel numaralandırma
                     if(panelW * scale > 30 && panelH * scale > 20) {
                         ctx.fillStyle = '#666';
                         ctx.font = `${Math.min(14, panelW * scale * 0.15)}px Arial`;
@@ -333,7 +410,6 @@
                 }
             }
 
-            // Ölçek bilgisi
             const scalePercent = (scale * 100).toFixed(0);
             document.getElementById('scaleInfo').textContent = 
                 `Çizim ölçeği: ~%${scalePercent} (1cm = ${(1*scale).toFixed(2)}px)`;
