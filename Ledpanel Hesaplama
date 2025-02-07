@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>LED Panel Hesaplayıcı</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .calculator {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            display: none;
+        }
+
+        #canvasContainer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        .scale-info {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .warning {
+            color: #d32f2f;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            border: 1px solid #ffcdd2;
+        }
+
+        .dimension-info {
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h2>LED Panel Hesaplayıcı</h2>
+        
+        <div class="input-group">
+            <label>Toplam Genişlik (cm):</label>
+            <input type="number" id="totalWidth" step="0.1">
+        </div>
+
+        <div class="input-group">
+            <label>Toplam Yükseklik (cm):</label>
+            <input type="number" id="totalHeight" step="0.1">
+        </div>
+
+        <div class="input-group">
+            <label>LED Panel Genişliği (cm):</label>
+            <input type="number" id="panelWidth" step="0.1">
+        </div>
+
+        <div class="input-group">
+            <label>LED Panel Yüksekliği (cm):</label>
+            <input type="number" id="panelHeight" step="0.1">
+        </div>
+
+        <button onclick="calculatePanels()">Hesapla</button>
+
+        <div class="result" id="result">
+            Gerekli Panel Sayısı: <span id="count">0</span>
+            <div id="dimensionInfo"></div>
+            <div id="warningMessage"></div>
+        </div>
+
+        <div id="canvasContainer">
+            <canvas id="panelCanvas" width="600" height="400"></canvas>
+            <div class="scale-info" id="scaleInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('panelCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function calculatePanels() {
+            // Değerleri alma
+            const totalWidth = parseFloat(document.getElementById('totalWidth').value);
+            const totalHeight = parseFloat(document.getElementById('totalHeight').value);
+            const panelWidth = parseFloat(document.getElementById('panelWidth').value);
+            const panelHeight = parseFloat(document.getElementById('panelHeight').value);
+
+            // Hata kontrolü
+            if([totalWidth, totalHeight, panelWidth, panelHeight].some(v => v <= 0)) {
+                alert("Lütfen tüm alanlara 0'dan büyük değerler giriniz!");
+                return;
+            }
+
+            // Hesaplamalar
+            const panelsWidth = Math.ceil(totalWidth / panelWidth);
+            const panelsHeight = Math.ceil(totalHeight / panelHeight);
+            const totalPanels = panelsWidth * panelsHeight;
+
+            // Gerçek boyut hesaplamaları
+            const actualWidth = panelsWidth * panelWidth;
+            const actualHeight = panelsHeight * panelHeight;
+            const widthDiff = actualWidth - totalWidth;
+            const heightDiff = actualHeight - totalHeight;
+
+            // Boyut bilgilerini hazırla
+            let dimensionHTML = `
+                <div class="dimension-info">
+                    Oluşan Toplam Boyut: ${actualWidth.toFixed(1)}cm x ${actualHeight.toFixed(1)}cm
+                </div>
+            `;
+
+            // Uyarı mesajını hazırla
+            let warningHTML = '';
+            if(widthDiff > 0 || heightDiff > 0) {
+                warningHTML = `
+                    <div class="warning">
+                        ⚠️ Hedef boyuttan fark:
+                        ${widthDiff > 0 ? `Genişlikte +${widthDiff.toFixed(1)}cm` : ''}
+                        ${heightDiff > 0 ? `Yükseklikte +${heightDiff.toFixed(1)}cm` : ''}
+                    </div>
+                `;
+            }
+
+            // Sonucu gösterme
+            document.getElementById('count').textContent = totalPanels;
+            document.getElementById('dimensionInfo').innerHTML = dimensionHTML;
+            document.getElementById('warningMessage').innerHTML = warningHTML;
+            document.getElementById('result').style.display = 'block';
+            
+            // Çizimi yap
+            drawPanels(totalWidth, totalHeight, panelWidth, panelHeight, panelsWidth, panelsHeight);
+        }
+
+        function drawPanels(totalW, totalH, panelW, panelH, cols, rows) {
+            // Canvas'ı temizle
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Ölçek hesapla
+            const scaleW = canvas.width / totalW;
+            const scaleH = canvas.height / totalH;
+            const scale = Math.min(scaleW, scaleH);
+            
+            // Çizim boyutlarını hesapla
+            const drawWidth = totalW * scale;
+            const drawHeight = totalH * scale;
+            
+            // Ortala
+            const offsetX = (canvas.width - drawWidth) / 2;
+            const offsetY = (canvas.height - drawHeight) / 2;
+            
+            // Panelleri çiz
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            
+            for(let i = 0; i < cols; i++) {
+                for(let j = 0; j < rows; j++) {
+                    const x = offsetX + (i * panelW * scale);
+                    const y = offsetY + (j * panelH * scale);
+                    const width = panelW * scale;
+                    const height = panelH * scale;
+                    
+                    // Panel çerçevesi
+                    ctx.strokeRect(x, y, width, height);
+                    
+                    // Panel numarası
+                    ctx.fillStyle = '#666';
+                    ctx.font = `${Math.min(12, width*0.3)}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText(
+                        `${i+1}x${j+1}`,
+                        x + width/2,
+                        y + height/2 + 5
+                    );
+                }
+            }
+            
+            // Ölçek bilgisi
+            const scalePercent = (scale * 100).toFixed(0);
+            document.getElementById('scaleInfo').textContent = 
+                `Çizim ölçeği: ~%${scalePercent} (1cm = ${(1*scale).toFixed(2)}px)`;
+        }
+    </script>
+</body>
+</html>
