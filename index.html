@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Sayfası</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", async function () {
+            try {
+                const response = await fetch("/"); // Klasördeki dosyaları almayı dener
+                const text = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, "text/html");
+                
+                const links = [...doc.querySelectorAll("a")] // Linkleri al
+                    .map(a => a.getAttribute("href"))
+                    .filter(href => href.endsWith(".html") && href !== "index.html");
+                
+                const container = document.getElementById("file-list");
+                links.forEach(link => {
+                    const item = document.createElement("div");
+                    item.className = "file-item";
+                    item.innerHTML = `<a href="${link}">${link}</a>`;
+                    container.appendChild(item);
+                });
+            } catch (error) {
+                console.error("Dosyalar listelenirken hata oluştu", error);
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 20px;
+        }
+        .file-item {
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .file-item:hover {
+            transform: scale(1.05);
+        }
+        a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mevcut Sayfalar</h1>
+    <div id="file-list" class="file-list"></div>
+</body>
+</html>
