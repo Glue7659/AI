@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Sayfası</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+        }
+        .file-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .file-list li {
+            margin: 10px 0;
+        }
+        .file-list a {
+            text-decoration: none;
+            color: #333;
+            font-size: 1.2em;
+            transition: color 0.3s;
+        }
+        .file-list a:hover {
+            color: #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Giriş Sayfası</h1>
+        <ul class="file-list" id="fileList">
+            <!-- Dosyalar burada listelenecek -->
+        </ul>
+    </div>
+
+    <script>
+        // Bu kod, sunucu tarafında çalıştırılmalıdır. Tarayıcıda çalışmayacaktır.
+        // Node.js ile bir sunucu oluşturup, dizindeki dosyaları tarayabilirsiniz.
+        // Aşağıdaki kod, Node.js ortamında çalışacak şekilde yazılmıştır.
+
+        const fs = require('fs');
+        const path = require('path');
+
+        const directoryPath = path.join(__dirname);
+
+        fs.readdir(directoryPath, (err, files) => {
+            if (err) {
+                return console.log('Dizin okunurken hata oluştu: ' + err);
+            }
+
+            const fileList = document.getElementById('fileList');
+            files.forEach(file => {
+                if (path.extname(file) === '.html' && file !== 'index.html') {
+                    const listItem = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = file;
+                    link.textContent = file;
+                    listItem.appendChild(link);
+                    fileList.appendChild(listItem);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
