@@ -33,7 +33,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Modern Toggle Butonu */
         .theme-toggle-container {
             position: fixed;
             top: 20px;
@@ -171,6 +170,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
         }
 
         canvas {
@@ -178,6 +178,40 @@
             border-radius: 4px;
             background-color: var(--input-bg);
             max-width: 100%;
+        }
+
+        .width-info {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9em;
+            color: var(--text-color);
+            white-space: nowrap;
+            background: var(--bg-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .height-info {
+            position: absolute;
+            left: -130px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            font-size: 0.9em;
+            color: var(--text-color);
+            white-space: nowrap;
+            background: var(--bg-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .dimension-comparison {
+            color: #666;
+            font-size: 0.85em;
+            margin-left: 8px;
         }
 
         .scale-info {
@@ -270,6 +304,8 @@
             </div>
             
             <div class="canvas-container">
+                <div class="width-info" id="widthInfo"></div>
+                <div class="height-info" id="heightInfo"></div>
                 <canvas id="panelCanvas" width="800" height="400"></canvas>
                 <div class="scale-info" id="scaleInfo"></div>
             </div>
@@ -277,16 +313,15 @@
     </div>
 
     <script>
-        // Tema değiştirme fonksiyonu
         function toggleTheme() {
             const body = document.body;
             const currentTheme = body.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             body.setAttribute('data-theme', newTheme);
             document.getElementById('themeCheckbox').checked = newTheme === 'dark';
+            updateDimensionInfo();
         }
 
-        // Sayfa yüklendiğinde tema durumunu kontrol et
         document.addEventListener('DOMContentLoaded', () => {
             const currentTheme = document.body.getAttribute('data-theme') || 'light';
             document.getElementById('themeCheckbox').checked = currentTheme === 'dark';
@@ -364,6 +399,22 @@
                 calculations[type].cols,
                 calculations[type].rows
             );
+            updateDimensionInfo();
+        }
+
+        function updateDimensionInfo() {
+            const totalWidth = parseFloat(document.getElementById('totalWidth').value);
+            const totalHeight = parseFloat(document.getElementById('totalHeight').value);
+            
+            document.getElementById('widthInfo').innerHTML = `
+                Oluşan Genişlik: <strong>${calculations[currentCalculation].actualW.toFixed(1)}cm</strong>
+                <span class="dimension-comparison">(Talep: ${totalWidth.toFixed(1)}cm • Fark: ${calculations[currentCalculation].diffW.toFixed(1)}cm)</span>
+            `;
+
+            document.getElementById('heightInfo').innerHTML = `
+                Oluşan Yükseklik: <strong>${calculations[currentCalculation].actualH.toFixed(1)}cm</strong>
+                <span class="dimension-comparison">(Talep: ${totalHeight.toFixed(1)}cm • Fark: ${calculations[currentCalculation].diffH.toFixed(1)}cm)</span>
+            `;
         }
 
         function drawPanels(totalW, totalH, panelW, panelH, cols, rows) {
